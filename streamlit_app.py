@@ -107,7 +107,7 @@ with st.sidebar:
     - **Resume Match Score**: Instantly see how well your resume matches a target job.
     - **Resume Optimizer**: Get concrete suggestions on how to tailor your resume.
     - **JD Analyzer**: Automatically extract core skills, keywords, and tasks.
-    - **Outreach & Cover Letters**: Instantly write personalized pitches.
+    - **Cover Letter**: Auto-generate a tailored cover letter with your analysis.
     """)
 
 # Main Title
@@ -121,183 +121,156 @@ if not backend_online:
     st.code("uvicorn app.main:app --reload --port 8000")
     st.stop()
 
-# Set up tabs
-tab_matcher, tab_cover = st.tabs([
-    "🎯 Resume Matcher & Optimizer", 
-    "✍️ Cover Letter Generator"
-])
+# Single unified tab
+st.markdown("<div class='section-header'>Resume Matcher & AI Optimizer</div>", unsafe_allow_html=True)
+st.markdown("<div class='section-subheader'>Compare your resume against any job description. Get match scores, optimization tips, and a tailored cover letter — all in one place.</div>", unsafe_allow_html=True)
 
-# ==========================================
-# TAB 1: RESUME MATCHER & OPTIMIZER
-# ==========================================
-with tab_matcher:
-    st.markdown("<div class='section-header'>Resume Matcher & AI Optimizer</div>", unsafe_allow_html=True)
-    st.markdown("<div class='section-subheader'>Compare your resume against any job description. Instantly extract requirements, compute match scores, and optimize bullet points.</div>", unsafe_allow_html=True)
+col_inputs, col_results = st.columns([1, 1])
 
-    col_inputs, col_results = st.columns([1, 1])
-
-    with col_inputs:
-        st.subheader("📝 Inputs")
-        
-        # Job Description input
-        jd_input = st.text_area("Paste Job Description*", placeholder="Paste the full job description details here...", height=250)
-        
-        # Resume file uploader
-        resume_file = st.file_uploader("Upload Resume (PDF or TXT)*", type=["pdf", "txt"])
-        
-        resume_text = ""
-        if resume_file is not None:
-            if resume_file.name.endswith(".pdf"):
-                resume_text = extract_text_from_pdf(resume_file)
-            else:
-                resume_text = resume_file.read().decode("utf-8")
-            st.success(f"Successfully loaded: {resume_file.name}")
-
-        analyze_button = st.button("🎯 Analyze & Score Resume", type="primary")
-
-    with col_results:
-        st.subheader("📊 Evaluation Report")
-        if not analyze_button:
-            st.info("Fill out the job description and upload your resume on the left, then click 'Analyze & Score Resume' to view the evaluation report.")
+with col_inputs:
+    st.subheader("📝 Inputs")
+    
+    # Job Description input
+    jd_input = st.text_area("Paste Job Description*", placeholder="Paste the full job description details here...", height=200)
+    
+    # Resume file uploader
+    resume_file = st.file_uploader("Upload Resume (PDF or TXT)*", type=["pdf", "txt"])
+    
+    resume_text = ""
+    if resume_file is not None:
+        if resume_file.name.endswith(".pdf"):
+            resume_text = extract_text_from_pdf(resume_file)
         else:
-            if not jd_input:
-                st.error("Please paste a job description first.")
-            elif not resume_text:
-                st.error("Please upload your resume (PDF or TXT) first.")
-            elif "Error" in resume_text:
-                st.error(resume_text)
-            else:
-                with st.spinner("Analyzing requirements & calculating match metrics..."):
-                    # 1. Fetch JD requirements
-                    jd_payload = {"job_description": jd_input}
-                    jd_res = requests.post(f"{BACKEND_URL}/api/parse-jd", json=jd_payload)
+            resume_text = resume_file.read().decode("utf-8")
+        st.success(f"Successfully loaded: {resume_file.name}")
+
+    st.markdown("---")
+    st.subheader("🏢 Cover Letter Details")
+    
+    col_company, col_role = st.columns(2)
+    with col_company:
+        company_name = st.text_input("Company Name*", placeholder="e.g. Netflix")
+    with col_role:
+        role_name = st.text_input("Role / Position*", placeholder="e.g. Senior Frontend Developer")
+
+    analyze_button = st.button("🎯 Analyze, Optimize & Generate Cover Letter", type="primary", use_container_width=True)
+
+with col_results:
+    st.subheader("📊 Evaluation Report")
+    if not analyze_button:
+        st.info("Fill out the job description, upload your resume, and enter the company name & role on the left, then click the button to view your full evaluation report and cover letter.")
+    else:
+        if not jd_input:
+            st.error("Please paste a job description first.")
+        elif not resume_text:
+            st.error("Please upload your resume (PDF or TXT) first.")
+        elif "Error" in resume_text:
+            st.error(resume_text)
+        elif not company_name or not role_name:
+            st.error("Please enter both Company Name and Role to generate the cover letter.")
+        else:
+            with st.spinner("Analyzing requirements, calculating match metrics & generating cover letter..."):
+                # 1. Fetch JD requirements
+                jd_payload = {"job_description": jd_input}
+                jd_res = requests.post(f"{BACKEND_URL}/api/parse-jd", json=jd_payload)
+                
+                # 2. Fetch Resume matching score and improvement tips
+                match_payload = {
+                    "resume_text": resume_text,
+                    "job_description": jd_input
+                }
+                match_res = requests.post(f"{BACKEND_URL}/api/analyze-resume", json=match_payload)
+                
+                # 3. Generate cover letter
+                cv_payload = {
+                    "resume_text": resume_text,
+                    "job_description": jd_input,
+                    "company_name": company_name,
+                    "role": role_name
+                }
+                cv_res = requests.post(f"{BACKEND_URL}/api/generate-cover-message", json=cv_payload)
+                
+                if jd_res.status_code == 200 and match_res.status_code == 200:
+                    jd_data = jd_res.json()
+                    match_data = match_res.json()
                     
-                    # 2. Fetch Resume matching score and improvement tips
-                    match_payload = {
-                        "resume_text": resume_text,
-                        "job_description": jd_input
-                    }
-                    match_res = requests.post(f"{BACKEND_URL}/api/analyze-resume", json=match_payload)
-                    
-                    if jd_res.status_code == 200 and match_res.status_code == 200:
-                        jd_data = jd_res.json()
-                        match_data = match_res.json()
+                    # Check for API Errors
+                    if "error" in match_data:
+                        st.error(f"Analysis failed: {match_data.get('details')}")
+                        st.text("Raw Response:")
+                        st.code(match_data.get("raw_response"))
+                    else:
+                        # Render Match Score
+                        match_score = match_data.get("match_percentage", 0)
                         
-                        # Check for API Errors
-                        if "error" in match_data:
-                            st.error(f"Analysis failed: {match_data.get('details')}")
-                            st.text("Raw Response:")
-                            st.code(match_data.get("raw_response"))
-                        else:
-                            # Render Match Score
-                            match_score = match_data.get("match_percentage", 0)
+                        score_color = "#EF4444"
+                        if match_score >= 80:
+                            score_color = "#10B981"
+                        elif match_score >= 50:
+                            score_color = "#F59E0B"
                             
-                            score_color = "#EF4444"
-                            if match_score >= 80:
-                                score_color = "#10B981"
-                            elif match_score >= 50:
-                                score_color = "#F59E0B"
-                                
-                            st.markdown(f"""
-                            <div style='background-color: #1E293B; border-radius: 12px; padding: 25px; border: 1px solid #334155; text-align: center; margin-bottom: 20px;'>
-                                <div style='font-size: 1.1rem; color: #94A3B8; font-weight: 500; margin-bottom: 5px;'>MATCH RATING</div>
-                                <div style='font-size: 3.8rem; font-weight: 800; color: {score_color}; line-height: 1;'>{match_score}%</div>
-                                <div style='margin-top: 10px; height: 10px; background-color: #334155; border-radius: 5px; overflow: hidden;'>
-                                    <div style='height: 100%; width: {match_score}%; background-color: {score_color}; border-radius: 5px;'></div>
-                                </div>
+                        st.markdown(f"""
+                        <div style='background-color: #1E293B; border-radius: 12px; padding: 25px; border: 1px solid #334155; text-align: center; margin-bottom: 20px;'>
+                            <div style='font-size: 1.1rem; color: #94A3B8; font-weight: 500; margin-bottom: 5px;'>MATCH RATING</div>
+                            <div style='font-size: 3.8rem; font-weight: 800; color: {score_color}; line-height: 1;'>{match_score}%</div>
+                            <div style='margin-top: 10px; height: 10px; background-color: #334155; border-radius: 5px; overflow: hidden;'>
+                                <div style='height: 100%; width: {match_score}%; background-color: {score_color}; border-radius: 5px;'></div>
                             </div>
-                            """, unsafe_allow_html=True)
-                            
-                            # Create nested tabs inside Results for detailed findings
-                            res_tab_requirements, res_tab_feedback = st.tabs(["📌 Extracted Key Requirements", "💡 AI Improvement Suggestions"])
-                            
-                            with res_tab_requirements:
-                                st.markdown("#### Core Skills Needed:")
-                                for skill in jd_data.get("skills", ["None extracted"]):
-                                    st.markdown(f"- **{skill}**")
-                                    
-                                st.markdown("#### Primary Responsibilities:")
-                                for resp in jd_data.get("responsibilities", ["None extracted"]):
-                                    st.markdown(f"- {resp}")
-                                    
-                                st.markdown("#### Experience Level:")
-                                st.info(jd_data.get("experience_level", "Not explicitly specified"))
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # Create nested tabs: Requirements, Suggestions, and Cover Letter
+                        res_tab_requirements, res_tab_feedback, res_tab_cover = st.tabs([
+                            "📌 Key Requirements", 
+                            "💡 AI Suggestions", 
+                            "✍️ Cover Letter"
+                        ])
+                        
+                        with res_tab_requirements:
+                            st.markdown("#### Core Skills Needed:")
+                            for skill in jd_data.get("skills", ["None extracted"]):
+                                st.markdown(f"- **{skill}**")
                                 
-                                st.markdown("#### Important Keywords:")
-                                if jd_data.get("keywords"):
-                                    st.write(", ".join([f"`{kw}`" for kw in jd_data.get("keywords")]))
-                                else:
-                                    st.write("None")
-
-                            with res_tab_feedback:
-                                st.markdown("#### 💪 Key Strengths Found:")
-                                for strength in match_data.get("strengths", ["No major matches found"]):
-                                    st.success(strength)
-                                    
-                                st.markdown("#### 🛠️ Recommended Resume Enhancements:")
-                                for imp in match_data.get("improvements", ["Your profile matches this job description perfectly!"]):
-                                    st.info(imp)
-                    else:
-                        st.error("Error communicating with AI services.")
-
-# ==========================================
-# TAB 3: COVER LETTER GENERATOR
-# ==========================================
-with tab_cover:
-    st.markdown("<div class='section-header'>Customized Cover Message Generator</div>", unsafe_allow_html=True)
-    st.markdown("<div class='section-subheader'>Instantly generate a tailored professional cover message or cold email designed for this specific target role.</div>", unsafe_allow_html=True)
-
-    col_cv_inputs, col_cv_results = st.columns([1, 1])
-
-    with col_cv_inputs:
-        st.subheader("🏢 Role Details")
-        company_name_cv = st.text_input("Target Company Name*", placeholder="e.g. Netflix")
-        role_cv = st.text_input("Target Role Name*", placeholder="e.g. Senior Frontend Developer")
-        
-        # PDF/TXT Uploader for Cover Letter
-        resume_file_cv = st.file_uploader("Upload your Resume (PDF or TXT)*", type=["pdf", "txt"], key="resume_cv")
-        resume_text_cv = ""
-        if resume_file_cv is not None:
-            if resume_file_cv.name.endswith(".pdf"):
-                resume_text_cv = extract_text_from_pdf(resume_file_cv)
-            else:
-                resume_text_cv = resume_file_cv.read().decode("utf-8")
-            st.success(f"Resume loaded for letter generation: {resume_file_cv.name}")
-
-        jd_input_cv = st.text_area("Target Job Description*", placeholder="Paste the target role description details...", height=200, key="jd_cv")
-
-        generate_cv = st.button("✍️ Generate Customized Message", type="primary")
-
-    with col_cv_results:
-        st.subheader("📬 Tailored Message Output")
-        if not generate_cv:
-            st.info("Provide the company name, role, resume, and job description, then click 'Generate Customized Message' to output your personalized cover letter.")
-        else:
-            if not company_name_cv or not role_cv:
-                st.error("Company Name and Role are required.")
-            elif not resume_text_cv:
-                st.error("Please upload your resume (PDF or TXT).")
-            elif not jd_input_cv:
-                st.error("Please paste the job description first.")
-            else:
-                with st.spinner("Writing tailored cover message using Llama-3.3..."):
-                    cv_payload = {
-                        "resume_text": resume_text_cv,
-                        "job_description": jd_input_cv,
-                        "company_name": company_name_cv,
-                        "role": role_cv
-                    }
-                    cv_res = requests.post(f"{BACKEND_URL}/api/generate-cover-message", json=cv_payload)
-                    
-                    if cv_res.status_code == 200:
-                        cv_data = cv_res.json()
-                        if "error" in cv_data:
-                            st.error(f"Generation failed: {cv_data.get('details')}")
-                            st.code(cv_data.get("raw_response"))
-                        else:
-                            cover_letter = cv_data.get("cover_message", "No letter was generated.")
-                            st.text_area("Custom Cover Letter:", value=cover_letter, height=450, key="generated_letter")
+                            st.markdown("#### Primary Responsibilities:")
+                            for resp in jd_data.get("responsibilities", ["None extracted"]):
+                                st.markdown(f"- {resp}")
+                                
+                            st.markdown("#### Experience Level:")
+                            st.info(jd_data.get("experience_level", "Not explicitly specified"))
                             
-                            st.info("💡 You can select the text in the area above and copy it directly to your clipboard.")
-                    else:
-                        st.error("Error communicating with AI cover letter generator.")
+                            st.markdown("#### Important Keywords:")
+                            if jd_data.get("keywords"):
+                                st.write(", ".join([f"`{kw}`" for kw in jd_data.get("keywords")]))
+                            else:
+                                st.write("None")
+
+                        with res_tab_feedback:
+                            st.markdown("#### 💪 Key Strengths Found:")
+                            for strength in match_data.get("strengths", ["No major matches found"]):
+                                st.success(strength)
+                                
+                            st.markdown("#### 🛠️ Recommended Resume Enhancements:")
+                            for imp in match_data.get("improvements", ["Your profile matches this job description perfectly!"]):
+                                st.info(imp)
+
+                        with res_tab_cover:
+                            if cv_res.status_code == 200:
+                                cv_data = cv_res.json()
+                                if "error" in cv_data:
+                                    st.error(f"Cover letter generation failed: {cv_data.get('details')}")
+                                    st.code(cv_data.get("raw_response"))
+                                else:
+                                    cover_letter = cv_data.get("cover_message", "No letter was generated.")
+                                    st.markdown(f"""
+                                    <div style='background-color: #1E293B; border-radius: 12px; padding: 20px; border: 1px solid #334155; margin-bottom: 15px;'>
+                                        <div style='font-size: 0.85rem; color: #94A3B8; margin-bottom: 8px;'>
+                                            Generated for <strong style='color: #6366F1;'>{role_name}</strong> at <strong style='color: #6366F1;'>{company_name}</strong>
+                                        </div>
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                                    st.text_area("Your Tailored Cover Letter:", value=cover_letter, height=400, key="generated_letter")
+                                    st.info("💡 You can select the text above and copy it directly to your clipboard.")
+                            else:
+                                st.error("Error generating cover letter. The analysis completed but the cover letter service encountered an issue.")
+                else:
+                    st.error("Error communicating with AI services.")
