@@ -669,42 +669,16 @@ with col_results:
                         # ── Tab: Tailored Resume ──
                         with tab_resume:
                             st.markdown('<p class="cat-label">Tailored Resume Preview</p>', unsafe_allow_html=True)
-                            
-                            # Prepare Overleaf HTML form button
-                            import html
-                            escaped_latex = html.escape(latex_code)
-                            overleaf_form_html = f"""
-                            <form action="https://www.overleaf.com/docs" method="post" target="_blank" style="margin-top: 10px; margin-bottom: 15px;">
-                                <input type="hidden" name="snip_name[]" value="main.tex">
-                                <input type="hidden" name="snip[]" value="{escaped_latex}">
-                                <button type="submit" style="width: 100%; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.15); transition: transform 0.1s ease;">
-                                    🍃 Open & Edit in Overleaf (1-Click Cloud Editor)
-                                </button>
-                            </form>
-                            """
 
                             if pdf_bytes:
                                 # Action buttons
-                                col_pdf_dl, col_tex_dl = st.columns(2)
-                                with col_pdf_dl:
-                                    st.download_button(
-                                        label="📥 Download Tailored PDF",
-                                        data=pdf_bytes,
-                                        file_name=f"{company_name.lower().replace(' ', '_')}_{role_name.lower().replace(' ', '_')}_resume.pdf",
-                                        mime="application/pdf",
-                                        use_container_width=True
-                                    )
-                                with col_tex_dl:
-                                    st.download_button(
-                                        label="📄 Download LaTeX File (.tex)",
-                                        data=latex_code,
-                                        file_name=f"{company_name.lower().replace(' ', '_')}_{role_name.lower().replace(' ', '_')}_resume.tex",
-                                        mime="text/plain",
-                                        use_container_width=True
-                                    )
-                                
-                                # Render Overleaf 1-click button
-                                st.markdown(overleaf_form_html, unsafe_allow_html=True)
+                                st.download_button(
+                                    label="📥 Download Tailored PDF",
+                                    data=pdf_bytes,
+                                    file_name=f"{company_name.lower().replace(' ', '_')}_{role_name.lower().replace(' ', '_')}_resume.pdf",
+                                    mime="application/pdf",
+                                    use_container_width=True
+                                )
                                 
                                 # Visual PDF Previewer (iframe base64)
                                 import base64
@@ -717,18 +691,7 @@ with col_results:
                                     with st.expander("🔍 View LaTeX Compilation Error Log"):
                                         st.code(pdf_error, language="text")
                                 else:
-                                    st.warning("⚠️ LaTeX compilation did not return a valid PDF. You can download and compile the LaTeX code manually.")
-                                    
-                                # Render Overleaf 1-click button so they can open in Overleaf right away!
-                                st.markdown(overleaf_form_html, unsafe_allow_html=True)
-
-                                st.download_button(
-                                    label="📄 Download LaTeX File (.tex)",
-                                    data=latex_code,
-                                    file_name=f"{company_name.lower().replace(' ', '_')}_{role_name.lower().replace(' ', '_')}_resume.tex",
-                                    mime="text/plain",
-                                    use_container_width=True
-                                )
+                                    st.warning("⚠️ LaTeX compilation did not return a valid PDF. You can copy the LaTeX code source below and compile it manually.")
                                 
                             st.markdown('<hr class="styled-divider">', unsafe_allow_html=True)
                             st.markdown('<p class="cat-label">Tailored LaTeX Code Source</p>', unsafe_allow_html=True)
