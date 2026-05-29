@@ -29,18 +29,17 @@ graph TD
 
 ---
 
-## Technical Features
+## Core Features
 
-* **ATS Match Score & Evaluation**: Compares candidate resumes against target job descriptions, computes a match percentage, and isolates specific candidate strengths alongside actionable layout and content recommendations.
-* **Requirement Extractor**: Parses long-form, unstructured job postings to extract essential skills, keywords, responsibilities, and experience level indicators into structured JSON format.
-* **LaTex Resume Tailoring**: Takes the candidate's raw resume and the target job description to synthesize an optimized LaTeX resume using a professional template.
-  * **Dynamic Section Preserving**: Dynamically parses and preserves custom sections from the candidate's original resume (e.g. Certifications, Languages, Awards).
-  * **No Summary Constraint**: Automatically omits generic summary sections to prioritize concrete experience and project space.
-  * **Strict LaTeX Escaping**: Built-in parser post-processes generated LaTeX code to escape ampersands (`\&`), underscores (`\_`), percent signs (`\%`), dollar signs (`\$`), and hash signs (`\#`) to prevent compilation errors.
-  * **Clean Partitioning**: Formats project titles cleanly using a plain space-dash-space (` - `) partition instead of unstable math-mode symbols.
-  * **No Project Bloat**: Automatically formats layout fields to comfortably fill exactly one page without spilling or leaving excessive empty space.
-* **Cold Outreach Creator**: Writes highly tailored outreach templates and cover letters based on the company name, role description, and candidate achievements.
-* **Supabase Job Board Tracker**: Integrated interface to track job application pipelines, update statuses, and log target descriptions.
+* **ATS Matching**: Compares your resume to the job description and gives a match score, strengths, and areas to improve.
+* **Job Parser**: Extracts skills, keywords, and requirements from any job description block.
+* **Smart LaTeX Resume Tailoring**: Generates a tailored LaTeX resume matching your credentials to the role.
+  * **Keeps Sections**: Retains custom sections from your original resume like Certifications, Languages, or Awards.
+  * **No Summary**: Omits summaries to save layout space for concrete work experience and projects.
+  * **Clean Formatting**: Auto-escapes special LaTeX symbols (`&`, `_`, `%`) and splits project titles with a simple ` - ` dash.
+  * **1-Page Limit**: Scales bullet details to perfectly fit exactly one page.
+* **Cover Letters**: Auto-generates customized outreach messages and cover letters.
+* **Applications Tracker**: An interactive dashboard backed by Supabase to log and track your job application pipeline.
 
 ---
 
