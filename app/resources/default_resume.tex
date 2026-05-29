@@ -1,0 +1,152 @@
+%-------------------------
+% Resume in Latex
+% Author: Shakra Shamim
+%------------------------
+
+\documentclass[letterpaper,11pt]{article}
+
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{fontawesome5}
+\usepackage{multicol}
+\setlength{\multicolsep}{-3.0pt}
+\setlength{\columnsep}{-1pt}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.6in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1.19in}
+\addtolength{\topmargin}{-.7in}
+\addtolength{\textheight}{1.4in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-6pt}\scshape\raggedright\large\bfseries
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\pdfgentounicode=1
+
+\newcommand{\resumeItem}[1]{\item\small{{#1 \vspace{-2pt}}}}
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{1.0\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{\small #2} \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-6pt}
+}
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{1.001\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & \textbf{\small #2}\\
+    \end{tabular*}\vspace{-6pt}
+}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.0in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+
+\begin{document}
+
+%----------HEADING----------
+\begin{center}
+    {\Huge \scshape Dipak Gaikwad} \\ \vspace{4pt}
+    \textbf{\Large \scshape Agentic AI Developer} \\ \vspace{4pt}
+    \small \faPhone\ +91-9359809574 ~
+    \href{mailto:dipakgaikwadmg@gmail.com}{\faEnvelope\ \underline{dipakgaikwadmg@gmail.com}} ~
+    \href{https://www.linkedin.com/in/dipakdg/}{\faLinkedin\ \underline{linkedin.com/in/dipakdg}}
+\end{center}
+
+
+%-----------SKILLS-----------
+\section{Technical Skills}
+\small
+\textbf{Programming Languages:} Python, SQL \\[2pt]
+\textbf{Agentic Frameworks:} LangGraph, LangChain, CrewAI, LlamaIndex \\[2pt]
+\textbf{LLM APIs:} Gemini (Vertex AI), Groq (Llama 3.1), OpenAI-compatible APIs \\[2pt]
+\textbf{AI Techniques:} RAG, Modular RAG, Multi-Agent Orchestration, Tool Calling, Prompt Engineering, Sentence Transformers, Embedding-based Search, RLHF (conceptual) \\[2pt]
+\textbf{LLMOps / Evaluation:} LangSmith (tracing, prompt versioning), RAGAS, BLEU, Retrieval Quality Evaluation \\[2pt]
+\textbf{Databases:} PostgreSQL, SQLite, ChromaDB, LlamaIndex Vector Stores \\[2pt]
+\textbf{Cloud / Tools:} GCP, AWS, Azure (LLM APIs), Docker, Git, Railway, FastAPI, Django REST Framework \\[2pt]
+
+%-----------EXPERIENCE-----------
+\section{Experience}
+\resumeSubHeadingListStart
+  \resumeSubheading
+    {Junior Software Developer}{Nov 2025 -- Apr 2026}
+    {R3 Sys Pvt Ltd}{Nashik, Maharashtra}
+  \resumeItemListStart
+    \resumeItem{Cut webhook event routing failures by \textbf{60\%} by redesigning the Meta WhatsApp Cloud API ingestion layer -- adding schema validation, retry logic, and structured fallback handling for a system serving \textbf{50+ daily active users}.}
+    \resumeItem{Shipped \textbf{3 production REST API modules} in FastAPI and Django REST Framework ahead of sprint deadlines, eliminating \textbf{8+ hours/week} of manual intervention in customer onboarding and data sync workflows.}
+  \resumeItemListEnd
+\resumeSubHeadingListEnd
+
+%-----------PROJECTS-----------
+\section{Projects}
+\resumeSubHeadingListStart
+
+  \resumeProjectHeading
+      {\textbf{Research Agent with Self-Reflection Loop} $|$ \emph{LangGraph, Tavily, Gemini, Groq}}{\href{https://github.com/PythonicDG/Research-Agent-with-Self-Reflection-Loop}{\faGithub\ \underline{GitHub}}}
+      \resumeItemListStart
+        \resumeItem{Shipped a \textbf{multi-agent LangGraph pipeline} implementing planner/worker/critic patterns -- specialized nodes for query decomposition, web retrieval, confidence scoring, and iterative self-critique across heterogeneous LLM backends (Gemini + Groq).}
+        \resumeItem{Introduced a \textbf{confidence-gated validator node} as an anti-hallucination layer: scores output completeness, triggers re-retrieval on low-confidence results, and halts on unresolvable gaps -- reducing unsupported claims in final output.}
+        \resumeItem{Traced full agent execution via \textbf{LangSmith}, enabling prompt version comparison, per-node latency profiling, and systematic failure mode identification across multi-step reasoning chains.}
+      \resumeItemListEnd
+
+  \resumeProjectHeading
+      {\textbf{Embeddable RAG Chatbot Widget} $|$ \emph{Modular RAG, ChromaDB, LlamaIndex, Groq}}{\href{https://github.com/PythonicDG/RAG-Based-Chatbot}{\faGithub\ \underline{GitHub}}}
+      \resumeItemListStart
+        \resumeItem{Delivered a \textbf{modular, multi-tenant RAG platform} with tenant-isolated vector collections, MiniLM-L6-v2 embeddings, and configurable PDF chunking pipelines -- processing \textbf{100+ documents per session}.}
+        \resumeItem{Reduced Q\&A response latency by \textbf{\textasciitilde40\%} through iterative chunk-size optimization validated against retrieval quality metrics (RAGAS), applying a closed \textbf{instrument \textrightarrow{} evaluate \textrightarrow{} improve} LLMOps loop.}
+        \resumeItem{Paired \textbf{embedding-based vector search with structured metadata filtering} to improve precision on domain-specific knowledge bases, reducing off-topic retrievals without sacrificing recall.}
+      \resumeItemListEnd
+
+  \resumeProjectHeading
+      {\textbf{GitHub Repository Analyzer Agent} $|$ \emph{LangChain, LangGraph, ChromaDB, Gemini}}{\href{https://github.com/PythonicDG/GitHub-Repository-Analysis-Agent}{\faGithub\ \underline{GitHub}}}
+      \resumeItemListStart
+        \resumeItem{Shipped a \textbf{tool-calling agent} with dynamic routing across code retrieval, documentation search, and structured JSON cache -- grounding every response in repository-specific context to measurably cut hallucination rate vs.\ model priors.}
+        \resumeItem{Replaced manual README-based onboarding with an \textbf{automated multi-step Q\&A workflow}, eliminating unstructured document search and reducing developer ramp-up friction on unfamiliar codebases.}
+      \resumeItemListEnd
+
+  \resumeProjectHeading
+      {\textbf{Stateful Fitness Coaching Agent} $|$ \emph{LangGraph, ChromaDB, Gemini, Telegram API}}{\href{https://github.com/PythonicDG/telegram-fitness-agent-bot}{\faGithub\ \underline{GitHub}}}
+      \resumeItemListStart
+        \resumeItem{Deployed a \textbf{production multi-node LangGraph agent} to real users (live at t.me/fitness\_power\_ai\_agent\_bot) with stateful workflow nodes for onboarding, recovery tracking, adaptive planning, and long-term memory via ChromaDB.}
+        \resumeItem{Introduced \textbf{cost/latency-aware model routing} between Gemini and Groq based on task complexity -- cutting inference cost on lightweight tasks while preserving output quality on reasoning-heavy queries.}
+      \resumeItemListEnd
+
+\resumeSubHeadingListEnd
+
+%-----------EDUCATION-----------
+\section{Education}
+\resumeSubHeadingListStart
+
+  \resumeSubheading
+    {Master of Computer Applications (MCA)}{Graduated: 2025}
+    {Pimpri Chinchwad College of Engineering (PCCOE), Pune}{CGPA: 8.6 / 10}
+
+  \resumeSubheading
+    {Bachelor of Computer Applications (BCA)}{Graduated: 2023}
+    {Sangamner College, Ahilyanagar}{CGPA: 7.3 / 10}
+
+\resumeSubHeadingListEnd
+
+\end{document}

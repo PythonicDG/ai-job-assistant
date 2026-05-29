@@ -325,6 +325,48 @@ def build_score_ring(score, color):
     </div>
     """
 
+def build_comparative_scores(score_before, score_after):
+    radius = 50
+    circumference = 2 * 3.14159 * radius
+    
+    offset_before = circumference - (score_before / 100) * circumference
+    offset_after = circumference - (score_after / 100) * circumference
+    
+    def get_color_details(score):
+        if score >= 80:
+            return "#10B981", "rgba(16,185,129,0.1)", "Excellent Match"
+        elif score >= 60:
+            return "#F59E0B", "rgba(245,158,11,0.1)", "Good Match"
+        elif score >= 40:
+            return "#F59E0B", "rgba(245,158,11,0.1)", "Moderate Match"
+        else:
+            return "#EF4444", "rgba(239,68,68,0.1)", "Needs Improvement"
+            
+    color_before, bg_before, status_before = get_color_details(score_before)
+    color_after, bg_after, status_after = get_color_details(score_after)
+    
+    diff = score_after - score_before
+    diff_indicator = ""
+    if diff > 0:
+        diff_indicator = f'<div style="font-size:1.15rem;font-weight:700;color:#10B981;margin-top:8px;">📈 Boost: +{diff}%</div>'
+    elif diff < 0:
+        diff_indicator = f'<div style="font-size:1.15rem;font-weight:700;color:#EF4444;margin-top:8px;">📉 Diff: {diff}%</div>'
+    else:
+        diff_indicator = f'<div style="font-size:1.15rem;font-weight:700;color:#94A3B8;margin-top:8px;">⚖️ Safe</div>'
+        
+    return f'<div class="glass-card"><div style="text-align:center;font-weight:700;color:#F1F5F9;font-size:1.1rem;margin-bottom:20px;text-transform:uppercase;letter-spacing:0.05em;">Match Rating Comparative Report</div><div style="display:flex;justify-content:space-around;align-items:center;gap:15px;flex-wrap:wrap;"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:0.78rem;font-weight:600;color:#94A3B8;text-transform:uppercase;letter-spacing:0.05em;">Original Resume</div><div class="score-ring" style="width:120px;height:120px;position:relative;"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="{radius}" fill="none" stroke="rgba(51,65,85,0.4)" stroke-width="8"/><circle cx="60" cy="60" r="{radius}" fill="none" stroke="{color_before}" stroke-width="8" stroke-dasharray="{circumference}" stroke-dashoffset="{offset_before}" stroke-linecap="round" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 1s ease;"/></svg><div class="score-label" style="top:50%;left:50%;transform:translate(-50%,-50%);position:absolute;text-align:center;"><div class="score-value" style="color:{color_before};font-size:2rem;font-weight:800;line-height:1;">{score_before}</div><div class="score-unit" style="font-size:0.75rem;color:#64748B;">/ 100</div></div></div><div class="score-status" style="background:{bg_before};color:{color_before};font-size:0.75rem;padding:2px 10px;">{status_before}</div></div><div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:100px;"><div style="font-size:2.2rem;color:#6366F1;line-height:1;">➡️</div>{diff_indicator}</div><div style="display:flex;flex-direction:column;align-items:center;gap:8px;"><div style="font-size:0.78rem;font-weight:600;color:#A5B4FC;text-transform:uppercase;letter-spacing:0.05em;">Optimized Resume</div><div class="score-ring" style="width:120px;height:120px;position:relative;"><svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="{radius}" fill="none" stroke="rgba(51,65,85,0.4)" stroke-width="8"/><circle cx="60" cy="60" r="{radius}" fill="none" stroke="{color_after}" stroke-width="8" stroke-dasharray="{circumference}" stroke-dashoffset="{offset_after}" stroke-linecap="round" transform="rotate(-90 60 60)" style="transition:stroke-dashoffset 1s ease;"/></svg><div class="score-label" style="top:50%;left:50%;transform:translate(-50%,-50%);position:absolute;text-align:center;"><div class="score-value" style="color:{color_after};font-size:2rem;font-weight:800;line-height:1;">{score_after}</div><div class="score-unit" style="font-size:0.75rem;color:#64748B;">/ 100</div></div></div><div class="score-status" style="background:{bg_after};color:{color_after};font-size:0.75rem;padding:2px 10px;">{status_after}</div></div></div></div>'
+
+def compile_latex_to_pdf_online(latex_code: str):
+    try:
+        response = requests.get("https://latexonline.cc/compile", params={"text": latex_code}, timeout=30)
+        if response.status_code == 200 and response.headers.get("content-type") == "application/pdf":
+            return response.content, None
+        else:
+            error_log = response.text[:2500] if response.text else "No compiler logs returned."
+            return None, f"LaTeX Compilation Error (Status Code: {response.status_code}).\n\nCompiler Log:\n{error_log}"
+    except Exception as e:
+        return None, f"Could not reach LaTeX compilation service: {str(e)}"
+
 # ── Helper: render tags ──
 def render_tags(items, tag_class="tag-skill"):
     tags = "".join([f'<span class="tag {tag_class}">{item}</span>' for item in items])
@@ -465,7 +507,6 @@ with col_results:
         </div>
         """, unsafe_allow_html=True)
     else:
-        # ── Validation ──
         if not jd_input:
             st.error("Please paste a job description first.")
         elif not resume_text:
@@ -475,12 +516,12 @@ with col_results:
         elif not company_name or not role_name:
             st.error("Please enter both Company Name and Role.")
         else:
-            with st.spinner("🔍 Analyzing resume, extracting requirements & writing cover letter..."):
+            with st.spinner("🔍 Analyzing resume, extracting requirements, writing cover letter & tailoring your resume..."):
                 # 1. JD requirements
                 jd_payload = {"job_description": jd_input}
                 jd_res = requests.post(f"{BACKEND_URL}/api/parse-jd", json=jd_payload)
                 
-                # 2. Resume match
+                # 2. Original Resume match
                 match_payload = {"resume_text": resume_text, "job_description": jd_input}
                 match_res = requests.post(f"{BACKEND_URL}/api/analyze-resume", json=match_payload)
                 
@@ -493,29 +534,58 @@ with col_results:
                 }
                 cv_res = requests.post(f"{BACKEND_URL}/api/generate-cover-message", json=cv_payload)
 
-                if jd_res.status_code == 200 and match_res.status_code == 200:
+                # 4. Tailored Resume Generation
+                resume_payload = {
+                    "resume_text": resume_text,
+                    "job_description": jd_input,
+                    "company_name": company_name,
+                    "role": role_name
+                }
+                resume_res = requests.post(f"{BACKEND_URL}/api/generate-tailored-resume", json=resume_payload)
+
+                if jd_res.status_code == 200 and match_res.status_code == 200 and resume_res.status_code == 200:
                     jd_data = jd_res.json()
                     match_data = match_res.json()
+                    resume_data = resume_res.json()
 
                     if "error" in match_data:
                         st.error(f"Analysis failed: {match_data.get('details')}")
                         st.code(match_data.get("raw_response"))
+                    elif "error" in resume_data:
+                        st.error(f"Resume Tailoring failed: {resume_data.get('error')}")
+                        if "details" in resume_data:
+                            st.code(resume_data.get("raw_response"))
                     else:
-                        match_score = match_data.get("match_percentage", 0)
+                        match_score_before = match_data.get("match_percentage", 0)
+                        
+                        # 5. Compute optimized match score on optimized resume text
+                        opt_resume_text = resume_data.get("optimized_resume_text", "")
+                        match_score_after = match_score_before # fallback
+                        
+                        if opt_resume_text:
+                            opt_match_payload = {"resume_text": opt_resume_text, "job_description": jd_input}
+                            opt_match_res = requests.post(f"{BACKEND_URL}/api/analyze-resume", json=opt_match_payload)
+                            if opt_match_res.status_code == 200:
+                                opt_match_data = opt_match_res.json()
+                                match_score_after = opt_match_data.get("match_percentage", 0)
 
-                        score_color = "#EF4444"
-                        if match_score >= 80:
-                            score_color = "#10B981"
-                        elif match_score >= 50:
-                            score_color = "#F59E0B"
+                        # 6. Compile LaTeX to PDF online
+                        pdf_bytes = None
+                        pdf_error = None
+                        latex_code = resume_data.get("optimized_latex_code", "")
+                        
+                        if latex_code and latex_code != "% No LaTeX generated.":
+                            with st.spinner("📄 Compiling tailored resume to PDF..."):
+                                pdf_bytes, pdf_error = compile_latex_to_pdf_online(latex_code)
 
-                        # ── Score Ring ──
-                        st.markdown(build_score_ring(match_score, score_color), unsafe_allow_html=True)
+                        # ── Comparative Score Ring ──
+                        st.markdown(build_comparative_scores(match_score_before, match_score_after), unsafe_allow_html=True)
 
                         # ── Result Sub-Tabs ──
-                        tab_req, tab_tips, tab_cover = st.tabs([
+                        tab_req, tab_tips, tab_resume, tab_cover = st.tabs([
                             "📌  Requirements",
                             "💡  AI Insights",
+                            "📄  Tailored Resume",
                             "✍️  Cover Letter"
                         ])
 
@@ -556,24 +626,113 @@ with col_results:
                             strengths = match_data.get("strengths", [])
                             improvements = match_data.get("improvements", [])
 
+                            # Render the optimized changes
+                            st.markdown('<p class="cat-label">🛠️ Resume Tailoring Modifications</p>', unsafe_allow_html=True)
+                            changes = resume_data.get("changes", [])
+                            if changes:
+                                changes_html = ""
+                                for change in changes:
+                                    action = change.get("action", "OPTIMIZED").upper()
+                                    section = change.get("section", "General")
+                                    detail = change.get("detail", "")
+                                    reason = change.get("reason", "")
+                                    
+                                    if action == "ADDED":
+                                        action_badge = '<span style="background: rgba(16,185,129,0.15); color: #10B981; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">ADDED</span>'
+                                    elif action == "REMOVED":
+                                        action_badge = '<span style="background: rgba(239,68,68,0.15); color: #EF4444; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">REMOVED</span>'
+                                    else:
+                                        action_badge = '<span style="background: rgba(245,158,11,0.15); color: #F59E0B; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700;">OPTIMIZED</span>'
+                                        
+                                    changes_html += f"""
+                                    <div style="background: rgba(30,41,59,0.4); border: 1px solid rgba(100,116,139,0.15); padding: 12px 16px; border-radius: 8px; margin-bottom: 8px;">
+                                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                                            <strong style="color: #E2E8F0; font-size: 0.88rem;">{section}</strong>
+                                            {action_badge}
+                                        </div>
+                                        <div style="font-size: 0.85rem; color: #CBD5E1; margin-bottom: 4px;"><strong>Change:</strong> {detail}</div>
+                                        <div style="font-size: 0.82rem; color: #94A3B8;"><strong>Why:</strong> {reason}</div>
+                                    </div>
+                                    """
+                                st.markdown(changes_html, unsafe_allow_html=True)
+                            else:
+                                st.caption("No specific modifications listed.")
+
+                            st.markdown('<hr class="styled-divider">', unsafe_allow_html=True)
+
                             st.markdown('<p class="cat-label">Your Strengths</p>', unsafe_allow_html=True)
                             if strengths:
                                 st.markdown(render_info_cards(strengths, "strength"), unsafe_allow_html=True)
                             else:
                                 st.caption("No strengths identified.")
 
-                            st.markdown('<hr class="styled-divider">', unsafe_allow_html=True)
+                        # ── Tab: Tailored Resume ──
+                        with tab_resume:
+                            st.markdown('<p class="cat-label">Tailored Resume Preview</p>', unsafe_allow_html=True)
+                            
+                            # Prepare Overleaf HTML form button
+                            import html
+                            escaped_latex = html.escape(latex_code)
+                            overleaf_form_html = f"""
+                            <form action="https://www.overleaf.com/docs" method="post" target="_blank" style="margin-top: 10px; margin-bottom: 15px;">
+                                <input type="hidden" name="snip_name[]" value="main.tex">
+                                <input type="hidden" name="snip[]" value="{escaped_latex}">
+                                <button type="submit" style="width: 100%; background: linear-gradient(135deg, #10B981, #059669); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 700; font-size: 0.92rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(16,185,129,0.15); transition: transform 0.1s ease;">
+                                    🍃 Open & Edit in Overleaf (1-Click Cloud Editor)
+                                </button>
+                            </form>
+                            """
 
-                            st.markdown('<p class="cat-label">Suggested Improvements</p>', unsafe_allow_html=True)
-                            if improvements:
-                                st.markdown(render_info_cards(improvements, "improve"), unsafe_allow_html=True)
+                            if pdf_bytes:
+                                # Action buttons
+                                col_pdf_dl, col_tex_dl = st.columns(2)
+                                with col_pdf_dl:
+                                    st.download_button(
+                                        label="📥 Download Tailored PDF",
+                                        data=pdf_bytes,
+                                        file_name=f"{company_name.lower().replace(' ', '_')}_{role_name.lower().replace(' ', '_')}_resume.pdf",
+                                        mime="application/pdf",
+                                        use_container_width=True
+                                    )
+                                with col_tex_dl:
+                                    st.download_button(
+                                        label="📄 Download LaTeX File (.tex)",
+                                        data=latex_code,
+                                        file_name=f"{company_name.lower().replace(' ', '_')}_{role_name.lower().replace(' ', '_')}_resume.tex",
+                                        mime="text/plain",
+                                        use_container_width=True
+                                    )
+                                
+                                # Render Overleaf 1-click button
+                                st.markdown(overleaf_form_html, unsafe_allow_html=True)
+                                
+                                # Visual PDF Previewer (iframe base64)
+                                import base64
+                                base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+                                pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="850" type="application/pdf" style="border:1px solid rgba(100,116,139,0.25); border-radius:12px; margin-top:5px;"></iframe>'
+                                st.markdown(pdf_display, unsafe_allow_html=True)
                             else:
-                                st.markdown("""
-                                <div class="info-card info-card-strength">
-                                    <span class="icon">🎉</span>
-                                    <span>Your resume looks great for this role — no major changes needed!</span>
-                                </div>
-                                """, unsafe_allow_html=True)
+                                if pdf_error:
+                                    st.warning("⚠️ Live PDF Preview is currently unavailable.")
+                                    with st.expander("🔍 View LaTeX Compilation Error Log"):
+                                        st.code(pdf_error, language="text")
+                                else:
+                                    st.warning("⚠️ LaTeX compilation did not return a valid PDF. You can download and compile the LaTeX code manually.")
+                                    
+                                # Render Overleaf 1-click button so they can open in Overleaf right away!
+                                st.markdown(overleaf_form_html, unsafe_allow_html=True)
+
+                                st.download_button(
+                                    label="📄 Download LaTeX File (.tex)",
+                                    data=latex_code,
+                                    file_name=f"{company_name.lower().replace(' ', '_')}_{role_name.lower().replace(' ', '_')}_resume.tex",
+                                    mime="text/plain",
+                                    use_container_width=True
+                                )
+                                
+                            st.markdown('<hr class="styled-divider">', unsafe_allow_html=True)
+                            st.markdown('<p class="cat-label">Tailored LaTeX Code Source</p>', unsafe_allow_html=True)
+                            st.code(latex_code, language="latex")
 
                         # ── Tab: Cover Letter ──
                         with tab_cover:
@@ -604,3 +763,4 @@ with col_results:
                                 st.error("Cover letter generation failed. Analysis completed but the cover letter service had an issue.")
                 else:
                     st.error("Error communicating with AI services. Check that the backend is running.")
+
