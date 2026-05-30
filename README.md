@@ -1,4 +1,4 @@
-# AI Job Assistant & Resume Optimizer
+# AI Job Assistant & Resume Optimizer\n\n*Enterprise Copilot Platform for Automated Resume Alignment and Outreach Engineering*
 
 AI Job Assistant is a local copilot designed to help job seekers optimize their resumes, extract job description requirements, and generate tailored cover letters. The project consists of a high-performance FastAPI backend service driven by Large Language Models via the Groq SDK and a responsive Streamlit web application.
 
