@@ -1,4 +1,4 @@
-import os
+"""\nAI Gen-Core operations module.\nInterfaces with the Groq SDK and manages inference fallback pipelines for Llama models.\n"""\n\nimport os
 import json
 import re
 from groq import Groq
