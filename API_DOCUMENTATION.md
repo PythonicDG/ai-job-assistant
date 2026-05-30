@@ -1,4 +1,4 @@
-# AI Job Assistant - API & Project Documentation
+# AI Job Assistant - API & Project Documentation\n\n*Standard Reference Manual for Core Service Interfaces*
 
 Welcome to the **AI Job Assistant** documentation. This project provides an end-to-end suite designed to help job seekers optimize their resumes, parse requirements, and write custom outreach templates.
 
