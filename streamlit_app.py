@@ -20,8 +20,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Backend API Configuration
+# Backend & External API Configuration
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:8000")
+LATEX_COMPILER_URL = os.getenv("LATEX_COMPILER_URL", "https://latexonline.cc/compile")
 
 # ── Custom CSS ──────────────────────────────────────────────────────
 st.markdown("""
@@ -358,7 +359,7 @@ def build_comparative_scores(score_before, score_after):
 
 def compile_latex_to_pdf_online(latex_code: str):
     try:
-        response = requests.get("https://latexonline.cc/compile", params={"text": latex_code}, timeout=30)
+        response = requests.post(LATEX_COMPILER_URL, files={"file": ("main.tex", latex_code)}, timeout=30)
         if response.status_code == 200 and response.headers.get("content-type") == "application/pdf":
             return response.content, None
         else:
