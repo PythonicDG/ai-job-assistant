@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+# =========================================================================\n# System & Application Git Exclusion Configuration\n# =========================================================================\n\n# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
